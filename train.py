@@ -1,10 +1,11 @@
 import torch
-from  torchvision import transforms
-from torch.utils.data import DataLoader
-from torch.optim import Adam
-from utils import Pairloader, SiameseNet, _tqdm as tqdm
 import argparse
+import torch.optim as optim
+import torch.nn as nn
+from utils import Pairloader, SiameseNet, _tqdm as tqdm
+from torch.utils.data import DataLoader
 import os
+
 
 parser = argparse.ArgumentParser(description='Train SiameseNet')
 parser.add_argument('--save_location', '-sl', type=str, default='model/{}-epoch-{}.pth')
