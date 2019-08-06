@@ -1,0 +1,6 @@
+playground.ipynb
+*.mp4
+*.jpg
+*.pth
+.ipynb_checkpoints/
+__pycache__/
