@@ -20,7 +20,7 @@ model.eval()
 
 hand = torch.as_tensor(cv2.imread('data/valid/hand_4.jpg', 0)[None, None, ...]/255, dtype=torch.float).to(device=args.device)
 nyet = torch.as_tensor(cv2.imread('data/valid/nyet_5.jpg', 0)[None, None, ...]/255, dtype=torch.float).to(device=args.device)
-cap = cv2.VideoCapture('data/videos/testing.webm')
+cap = cv2.VideoCapture(0)
 rval = True
 
 while rval:
