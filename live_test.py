@@ -1,6 +1,6 @@
 import torch
 import argparse
-from utils import Pairloader, SiameseNet
+from utils import SiameseNet
 import cv2
 import numpy as np
 
@@ -17,23 +17,22 @@ model = SiameseNet().to(device=args.device)
 model.load_state_dict(torch.load(args.model_location.format('model',args.epoch), map_location=args.device))
 model.eval()
 
-
-hand = torch.as_tensor(cv2.imread('data/valid/hand_4.jpg', 0)[None, None, ...]/255, dtype=torch.float).to(device=args.device)
-nyet = torch.as_tensor(cv2.imread('data/valid/nyet_5.jpg', 0)[None, None, ...]/255, dtype=torch.float).to(device=args.device)
+hand = torch.as_tensor(cv2.imread('data/valid/hand_1.jpg', 0)[None, None]/255, dtype=torch.float).to(device=args.device)
+nohand = torch.as_tensor(cv2.imread('data/valid/nohand_1.jpg', 0)[None, None]/255, dtype=torch.float).to(device=args.device)
 cap = cv2.VideoCapture(0)
 rval = True
 
 while rval:
 	rval, frame = cap.read()
-	frame_tensor = torch.as_tensor(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[None, None, ...]/255, dtype=torch.float).to(device=args.device)
+	frame_tensor = torch.as_tensor(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[None, None]/255, dtype=torch.float).to(device=args.device)
 	
 	hand_compare = model([hand, frame_tensor])
-	nyet_compare = model([nyet, frame_tensor])
+	nohand_compare = model([nohand, frame_tensor])
 
-	if hand_compare.item() > nyet_compare.item():
-		print('Hand', hand_compare.item(), nyet_compare.item())
-	elif nyet_compare.item() > hand_compare.item():
-		print('Nyet', hand_compare.item(), nyet_compare.item())
+	if hand_compare.item() > nohand_compare.item():
+		print('Hand', hand_compare.item(), nohand_compare.item())
+	elif nohand_compare.item() > hand_compare.item():
+		print('Nyet', hand_compare.item(), nohand_compare.item())
 
 	cv2.imshow('frame', frame)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
