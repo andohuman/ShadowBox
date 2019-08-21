@@ -9,7 +9,7 @@ from tqdm import tqdm
 from torchvision import transforms, models
 
 class Pairloader(Dataset):
-    def __init__(self, root_dir='data', split='train', transform=None):
+    def __init__(self, root_dir='data', split=None, transform=None):
         
         self.root_dir = root_dir
         self.split = split
@@ -17,9 +17,7 @@ class Pairloader(Dataset):
         self.all_combinations = list(itertools.combinations(self.img_files, 2))
         
         if transform is None:
-            self.transform = transforms.Compose([
-                                                    transforms.ToTensor()
-                ])
+            self.transform = transforms.Compose([transforms.ToTensor()])
 
     def __len__(self):
         return len(self.all_combinations)
