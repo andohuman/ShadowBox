@@ -4,7 +4,7 @@ from utils import Pairloader, SiameseNet
 from torch.utils.data import DataLoader
 
 parser = argparse.ArgumentParser(description='Validate SiameseNet')
-parser.add_argument('--model_location', '-l', type=str, default='model/{}-epoch-{}.pth')
+parser.add_argument('--model_location', '-l', type=str, default='model/model-epoch-{}.pth')
 parser.add_argument('--epoch', '-e', type=int, default=None)
 parser.add_argument('--device','-d', type=str, default=None)
 args = parser.parse_args()

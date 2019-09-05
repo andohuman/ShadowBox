@@ -2,6 +2,7 @@ import cv2
 import torch
 from torch.utils.data import Dataset
 import torch.nn as nn
+import torch.nn.functional as F
 from glob import glob
 import os
 import itertools

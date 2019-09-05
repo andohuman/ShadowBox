@@ -3,9 +3,10 @@ import argparse
 from utils import SiameseNet
 import cv2
 import numpy as np
+import os
 
 parser = argparse.ArgumentParser(description='Live test')
-parser.add_argument('--model_location', '-l', type=str, default='model/{}-epoch-{}.pth')
+parser.add_argument('--model_location', '-l', type=str, default='model/model-epoch-{}.pth')
 parser.add_argument('--epoch', '-e', type=int, default=None)
 parser.add_argument('--device','-d', type=str, default=None)
 parser.add_argument('--ref','-r', type=str, default='references/')
@@ -18,12 +19,12 @@ def preprocess(img=None):
     return torch.as_tensor(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)[None, None]/255, dtype=torch.float).to(device=args.device)
 
 refs = {
-        'jump':preprocess(cv2.imread(os.path.join(args.ref, 'jump.jpg')))
+        'jump':preprocess(cv2.imread(os.path.join(args.ref, 'jump.jpg'))),
         'none':preprocess(cv2.imread(os.path.join(args.ref, 'none.jpg')))
         }
 
 print('Loading model')
-model = SiameseNet(mode='inference'. weights_path=args.model_location.format(args.epoch), refs_dict=refs, device=args.device)
+model = SiameseNet(mode='inference', weights_path=args.model_location.format(args.epoch), refs_dict=refs, device=args.device)
 
 cap = cv2.VideoCapture(0)
 rval = True
