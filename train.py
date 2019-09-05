@@ -6,7 +6,6 @@ from utils import Pairloader, SiameseNet, _tqdm as tqdm
 from torch.utils.data import DataLoader
 import os
 
-
 parser = argparse.ArgumentParser(description='Train SiameseNet')
 parser.add_argument('--save_location', '-sl', type=str, default='model/{}-epoch-{}.pth')
 parser.add_argument('--epochs', '-e', type=int, default=50)
@@ -17,7 +16,7 @@ args = parser.parse_args()
 if not args.device:
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-model = SiameseNet().to(device=args.device)
+model = SiameseNet(mode='train', device=args.device)
 datagen = DataLoader(Pairloader(split='train'), shuffle=True)
 bce_loss = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-4)
@@ -31,10 +30,10 @@ for epoch in range(args.epochs):
 
             t.set_description('EPOCH: %i'%(epoch+1))
 
-            imgs, label = [batch[0][0].to(device=args.device), batch[0][1].to(device=args.device)], batch[1].to(device=args.device)
+            img1, img2, label = batch[0][0].to(device=args.device), batch[0][1].to(device=args.device), batch[1].to(device=args.device)
 
             optimizer.zero_grad()
-            output = model(imgs)
+            output = model(img1, img2)
             loss = bce_loss(output, label)
             loss.backward()
             optimizer.step()

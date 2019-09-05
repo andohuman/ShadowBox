@@ -34,38 +34,86 @@ class Pairloader(Dataset):
         elif self.split == 'valid':
             return [img1_tensor, img2_tensor], [img_file1, img_file2]
 
+class SiameseNet(nn.Module):
+    def __init__(self, mode=None, weights_path=None, refs_dict=None, device=None):
+
+        assert device is not None, "Specify a device to load the model into"
+        assert mode in ['train', 'inference', 'validate'], "Unknown mode specified"
+
+        super(SiameseNet, self).__init__()
+
+        self.maxpool = nn.MaxPool2d(2)
+
+        self.conv1 = nn.Conv2d(1, 64, 20)
+        self.conv2 = nn.Conv2d(64, 128, 15)
+        self.conv3 = nn.Conv2d(128, 128, 10)
+        self.conv4 = nn.Conv2d(128, 256, 5)
+
+        self.globalavgpool = nn.AdaptiveAvgPool2d((1,1))
+
+        self.linear1 = nn.Linear(256, 128)
+        self.linear2 = nn.Linear(128, 1)
+
+        self.to(device) #push model to device
+
+        if mode == 'inference':
+            assert weights_path is not None or refs_dict is not None, "Please provide weights_path and reference dictionary"
+            self.eval() #set to eval mode till ref features are computed
+            self.load_state_dict(torch.load(weights_path, map_location=device))
+            self.feature_list = [self.compute_feature(i) for i in refs_dict.values()] #compute ref features for inference
+        
+        elif mode == 'validate':
+            assert weights_path is not None, "Please provide weights_path"
+            self.load_state_dict(torch.load(weights_path, map_location=device))
+
+        self.train() #set to train mode under any circumstance (for some reason, inference time in this mode is much faster)
+
+    def compute_feature(self, data): #compute features of the input data
+
+        x = self.conv1(data)
+        x = F.relu(x)
+        x = self.maxpool(x)
+
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = self.maxpool(x)
+
+        x = self.conv3(x)
+        x = F.relu(x)
+        x = self.maxpool(x)
+
+        x = self.conv4(x)
+        x = F.relu(x)
+        x = self.globalavgpool(x)
+
+        x = x.view(x.shape[0], -1)
+
+        x = self.linear1(x)
+
+        return x
+
+    def classify(self, feature1, feature2): #check for similarity here
+
+        x = torch.abs(feature2 - feature1)
+        x = self.linear2(x)
+        return torch.sigmoid(x)
+
+    def forward(self, data1, data2=None):
+
+        if data2 is not None: #train or valid mode
+
+            features = [self.compute_feature(data) for data in [data1, data2]]
+            prob = self.classify(features[0], features[1])
+
+            return prob
+
+        elif data2 is None: #inference mode
+
+            feature = self.compute_feature(data1)
+
+            return [self.classify(feature, i) for i in self.feature_list]
 
 class _tqdm(tqdm):
     def format_num(self, n):
         f = '{:.5f}'.format(n)
         return f
-
-class Identity(nn.Module):
-     def __init__(self):
-         super(Identity, self).__init__()
-     def forward(x):
-        return x
-
-class SiameseNet(nn.Module):
-    def __init__(self):
-         super(SiameseNet, self).__init__()
-         squeezenet = models.squeezenet1_1(pretrained=True)
-         squeezenet.features[0] = nn.Conv2d(1, 64, kernel_size=(3,3), stride=(2,2))
-         squeezenet.fc = Identity()
-
-         self.squeezenet = squeezenet
-         self.linear = nn.Linear(1000, 1)
-                                
-    def forward(self, data):
-        res = []
-
-        for i in [0,1]:
-            x = self.squeezenet(data[i])
-            x = x.view(x.size(0), -1)
-            res.append(x)
-
-        res = torch.abs(res[1] - res[0])
-        res = self.linear(res)
-        res = torch.sigmoid(res)
-
-        return res
