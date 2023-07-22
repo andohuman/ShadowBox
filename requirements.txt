@@ -1,6 +1,6 @@
 opencv_contrib_python==4.1.0.25
 numpy==1.22.0
 Pillow==6.0.0
-torch==1.1.0
+torch==1.13.1
 torchvision==0.3.0
 tqdm==4.32.2
